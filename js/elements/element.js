@@ -1,13 +1,7 @@
-export class OhmElement {
-    x;
-    y;
+import { Drawable } from "../draw.js";
 
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    draw() {
-        throw new Error("draw() must be implemented");
+export class OhmElement extends Drawable {
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
     }
 }
