@@ -1,4 +1,4 @@
-import { Drawable } from "../draw.js";
+import { Drawable } from "../draw/drawable.js";
 
 export class Cable extends Drawable {
     constructor(from, to) {

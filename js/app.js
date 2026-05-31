@@ -1,4 +1,4 @@
-import { Draw } from "./draw.js";
+import { Draw } from "./draw/draw.js";
 import { Cable } from "./elements/cable.js";
 import { OhmElement } from "./elements/element.js";
 

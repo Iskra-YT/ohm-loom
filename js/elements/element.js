@@ -1,8 +1,14 @@
-import { Drawable } from "../draw.js";
+import { Drawable } from "../draw/drawable.js";
+
+let nextElementId = 0;
 
 export class OhmElement extends Drawable {
+    current = 0; // A
+
     constructor(x, y, w, h) {
         super(x, y, w, h);
+
+        this.id = nextElementId++;
         this.terminals = [];
     }
 

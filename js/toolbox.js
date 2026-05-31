@@ -1,7 +1,7 @@
 import { Battery } from "./elements/battery.js";
 import { Resistor } from "./elements/resistor.js";
 import { LED } from "./elements/led.js";
-import { Draw, getPoint } from "./draw.js";
+import { Draw, getPoint } from "./draw/draw.js";
 
 document.querySelector("#battery").addEventListener("click", () => {
     Draw.append(new Battery(getPoint(5), getPoint(3)));

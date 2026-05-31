@@ -1,6 +1,8 @@
 import { OhmElement } from "./element.js";
 
 export class Resistor extends OhmElement {
+    resistance = 1000; // Ohm
+
     constructor(x, y) {
         super(x, y, 100, 40);
         this.terminals = [
