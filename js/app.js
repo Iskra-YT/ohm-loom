@@ -1,9 +1,13 @@
 import { Draw } from "./draw.js";
+import { Cable } from "./elements/cable.js";
+import { OhmElement } from "./elements/element.js";
 
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
 let dragged = null;
+let wiringFrom = null;
+let mousePos = { x: 0, y: 0 };
 
 function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
@@ -18,6 +22,17 @@ function render() {
     Draw.getList().forEach(el => {
         el.draw(ctx);
     });
+
+    if (wiringFrom) {
+        const start = wiringFrom.element.getTerminalPos(wiringFrom.terminalIndex);
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(mousePos.x, mousePos.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 }
 
 resizeCanvas();
@@ -41,20 +56,46 @@ canvas.addEventListener("mousedown", (e) => {
     const my = e.clientY - rect.top;
 
     if (e.button === 2) {
-        for (const el of Draw.getList()) {
+        const list = Draw.getList();
+        for (let i = list.length - 1; i >= 0; i--) {
+            const el = list[i];
             if (el.contains(mx, my)) {
+                if (el instanceof OhmElement) {
+                    const cables = list.filter(item => 
+                        item instanceof Cable && (item.from.element === el || item.to.element === el)
+                    );
+                    cables.forEach(c => Draw.remove(c));
+                }
                 Draw.remove(el);
                 break;
             }
         }
-
+        wiringFrom = null;
         return;
     }
 
     if (e.button === 0) {
         for (const el of Draw.getList()) {
+            if (el instanceof OhmElement) {
+                const terminalIndex = el.getTerminalAt(mx, my);
+                if (terminalIndex !== -1) {
+                    if (!wiringFrom) {
+                        wiringFrom = { element: el, terminalIndex };
+                    } else {
+                        if (wiringFrom.element !== el || wiringFrom.terminalIndex !== terminalIndex) {
+                            Draw.append(new Cable(wiringFrom, { element: el, terminalIndex }));
+                        }
+                        wiringFrom = null;
+                    }
+                    return;
+                }
+            }
+        }
+
+        for (const el of Draw.getList()) {
             if (el.contains(mx, my)) {
                 dragged = el;
+                wiringFrom = null;
                 break;
             }
         }
@@ -62,12 +103,14 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
-    if (!dragged) return;
-
     const rect = canvas.getBoundingClientRect();
+    mousePos.x = e.clientX - rect.left;
+    mousePos.y = e.clientY - rect.top;
 
-    dragged.x = e.clientX - rect.left;
-    dragged.y = e.clientY - rect.top;
+    if (dragged) {
+        dragged.x = mousePos.x;
+        dragged.y = mousePos.y;
+    }
 
     render();
 });
