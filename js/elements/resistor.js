@@ -12,18 +12,27 @@ export class Resistor extends OhmElement {
     }
 
     draw(ctx) {
-        ctx.fillStyle = "#fbbf24";
-        ctx.fillRect(this.x, this.y, this.w, this.h);
-        
-        ctx.strokeStyle = "black";
-        ctx.strokeRect(this.x, this.y, this.w, this.h);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
 
-        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y + 20);
+        ctx.lineTo(this.x + 20, this.y + 20);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(this.x + 80, this.y + 20);
+        ctx.lineTo(this.x + 100, this.y + 20);
+        ctx.stroke();
+
+        ctx.strokeRect(this.x + 20, this.y + 10, 60, 20);
+
+        ctx.fillStyle = "white";
         ctx.font = "bold 12px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(`${this.resistance} Ω`, this.x + this.w / 2, this.y + this.h / 2 + 5);
+        ctx.fillText(`${this.resistance} Ω`, this.x + this.w / 2, this.y + this.h / 2 + 25);
 
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "white";
         this.terminals.forEach(t => {
             ctx.beginPath();
             ctx.arc(this.x + t.x, this.y + t.y, 5, 0, Math.PI * 2);
@@ -31,7 +40,7 @@ export class Resistor extends OhmElement {
         });
 
         if (this.current !== 0) {
-            ctx.fillStyle = "black";
+            ctx.fillStyle = "#fbbf24";
             ctx.font = "12px Arial";
             ctx.textAlign = "left";
             ctx.fillText(`${(Math.abs(this.current) * 1000).toFixed(1)} mA`, this.x, this.y - 10);
