@@ -20,3 +20,8 @@ document.querySelector("#delete").addEventListener("click", () => {
         Draw.remove(el);
     }
 });
+
+document.querySelector("#run").addEventListener("click", () => {
+    Draw.buildNetlist();
+    console.log(Draw.netlist);
+});

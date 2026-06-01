@@ -17,7 +17,7 @@ export class OhmElement extends Drawable {
         if (!t) return null;
         return {
             x: this.x + t.x,
-            y: this.y + t.y
+            y: this.y + t.y,
         };
     }
 
@@ -28,5 +28,9 @@ export class OhmElement extends Drawable {
             if (dist < 10) return i;
         }
         return -1;
+    }
+
+    getNodes() {
+        return this.terminals.map((t) => t.node);
     }
 }
