@@ -1,5 +1,6 @@
 import { Cable } from "../elements/cable.js";
 import { OhmElement } from "../elements/element.js";
+import { Ground } from "../elements/ground.js";
 import { buildNodes } from "../terminals.js";
 
 export class Draw {
@@ -28,7 +29,19 @@ export class Draw {
 
         const cables = Draw.#drawList.filter((el) => el instanceof Cable);
 
-        Draw.nodes = buildNodes(elements, cables);
+        let nodes = buildNodes(elements, cables);
+
+        // Find ground node and move it to index 0
+        const groundNodeIndex = nodes.findIndex(node => 
+            node.some(terminal => terminal.element instanceof Ground)
+        );
+
+        if (groundNodeIndex !== -1) {
+            const [groundNode] = nodes.splice(groundNodeIndex, 1);
+            nodes.unshift(groundNode);
+        }
+
+        Draw.nodes = nodes;
 
         Draw.nodes.forEach((node, nodeIndex) => {
             for (const terminal of node) {
@@ -36,20 +49,16 @@ export class Draw {
                     nodeIndex;
             }
         });
-
-        console.log("Nodes rebuilt:", Draw.nodes);
     }
 
     static buildNetlist() {
-        for (const el of Draw.getList()) {
-            Draw.netlist = Draw.getList()
-                .filter((el) => el instanceof OhmElement)
-                .map((el) => ({
-                    type: el.constructor.name,
-                    element: el,
-                    nodes: el.getNodes(),
-                }));
-        }
+        Draw.netlist = Draw.getList()
+            .filter((el) => el instanceof OhmElement && !(el instanceof Ground))
+            .map((el) => ({
+                type: el.constructor.name,
+                element: el,
+                nodes: el.getNodes(),
+            }));
     }
 }
 
