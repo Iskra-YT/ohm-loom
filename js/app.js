@@ -1,6 +1,7 @@
 import { Draw } from "./draw/draw.js";
 import { Cable } from "./elements/cable.js";
 import { OhmElement } from "./elements/element.js";
+import { Joint } from "./elements/joint.js";
 
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
@@ -9,6 +10,15 @@ let dragged = null;
 let selected = null;
 let wiringFrom = null;
 let mousePos = { x: 0, y: 0 };
+let isShiftPressed = false;
+
+window.addEventListener("keydown", (e) => {
+    if (e.key === "Shift") isShiftPressed = true;
+});
+
+window.addEventListener("keyup", (e) => {
+    if (e.key === "Shift") isShiftPressed = false;
+});
 
 function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
@@ -33,11 +43,22 @@ function render() {
 
     if (wiringFrom) {
         const start = wiringFrom.element.getTerminalPos(wiringFrom.terminalIndex);
+        let targetX = mousePos.x;
+        let targetY = mousePos.y;
+
+        if (isShiftPressed) {
+            if (Math.abs(mousePos.x - start.x) > Math.abs(mousePos.y - start.y)) {
+                targetY = start.y;
+            } else {
+                targetX = start.x;
+            }
+        }
+
         ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(start.x, start.y);
-        ctx.lineTo(mousePos.x, mousePos.y);
+        ctx.lineTo(targetX, targetY);
         ctx.stroke();
         ctx.setLineDash([]);
     }
@@ -120,14 +141,22 @@ canvas.addEventListener("contextmenu", (e) => {
 canvas.addEventListener("mousedown", (e) => {
     const rect = canvas.getBoundingClientRect();
 
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    let mx = e.clientX - rect.left;
+    let my = e.clientY - rect.top;
 
     if (e.button === 2) {
         const list = Draw.getList();
         for (let i = list.length - 1; i >= 0; i--) {
             const el = list[i];
             if (el.contains(mx, my)) {
+                if (el instanceof Cable) {
+                    const pointIndex = el.getPointAt(mx, my);
+                    if (pointIndex !== -1) {
+                        el.removePoint(pointIndex);
+                        return;
+                    }
+                }
+
                 if (el === selected) {
                     selected = null;
                     updateSettingsBox();
@@ -155,6 +184,16 @@ canvas.addEventListener("mousedown", (e) => {
                         wiringFrom = { element: el, terminalIndex };
                     } else {
                         if (wiringFrom.element !== el || wiringFrom.terminalIndex !== terminalIndex) {
+                            let targetX = mx;
+                            let targetY = my;
+                            if (isShiftPressed) {
+                                const start = wiringFrom.element.getTerminalPos(wiringFrom.terminalIndex);
+                                if (Math.abs(mx - start.x) > Math.abs(my - start.y)) {
+                                    targetY = start.y;
+                                } else {
+                                    targetX = start.x;
+                                }
+                            }
                             Draw.append(new Cable(wiringFrom, { element: el, terminalIndex }));
                         }
                         wiringFrom = null;
@@ -165,18 +204,48 @@ canvas.addEventListener("mousedown", (e) => {
         }
 
         let found = false;
-        for (const el of Draw.getList()) {
+        const list = Draw.getList();
+        for (let i = list.length - 1; i >= 0; i--) {
+            const el = list[i];
             if (el.contains(mx, my)) {
                 dragged = el;
                 selected = el;
                 found = true;
                 wiringFrom = null;
+
+                if (el instanceof Cable) {
+                    let pointIndex = el.getPointAt(mx, my);
+                    if (pointIndex === -1) {
+                        const segmentIndex = el.getSegmentAt(mx, my);
+                        el.addPoint(mx, my, segmentIndex);
+                        pointIndex = segmentIndex;
+                    }
+                    el.draggingPointIndex = pointIndex;
+                }
                 break;
             }
         }
 
         if (!found) {
-            selected = null;
+            if (wiringFrom) {
+                let targetX = mx;
+                let targetY = my;
+                if (isShiftPressed) {
+                    const start = wiringFrom.element.getTerminalPos(wiringFrom.terminalIndex);
+                    if (Math.abs(mx - start.x) > Math.abs(my - start.y)) {
+                        targetY = start.y;
+                    } else {
+                        targetX = start.x;
+                    }
+                }
+                const joint = new Joint(targetX, targetY);
+                Draw.append(joint);
+                Draw.append(new Cable(wiringFrom, { element: joint, terminalIndex: 0 }));
+                wiringFrom = { element: joint, terminalIndex: 0 };
+                found = true;
+            } else {
+                selected = null;
+            }
         }
         updateSettingsBox();
     }
@@ -188,14 +257,24 @@ canvas.addEventListener("mousemove", (e) => {
     mousePos.y = e.clientY - rect.top;
 
     if (dragged) {
-        dragged.x = mousePos.x;
-        dragged.y = mousePos.y;
+        if (dragged instanceof Cable) {
+            if (dragged.draggingPointIndex !== -1) {
+                dragged.points[dragged.draggingPointIndex].x = mousePos.x;
+                dragged.points[dragged.draggingPointIndex].y = mousePos.y;
+            }
+        } else {
+            dragged.x = mousePos.x;
+            dragged.y = mousePos.y;
+        }
     }
 
     render();
 });
 
 window.addEventListener("mouseup", () => {
+    if (dragged instanceof Cable) {
+        dragged.draggingPointIndex = -1;
+    }
     dragged = null;
 });
 
