@@ -1,5 +1,6 @@
 import { Draw } from "../draw/draw.js";
 import { calculateNodeCount } from "./tool.js";
+import { DamagedNode } from "../elements/damaged.js";
 
 export function circuitSolver() {
     const totalNodes = calculateNodeCount();
@@ -40,6 +41,7 @@ export function circuitSolver() {
         }
 
         console.log("Voltages:", voltages);
+        let anyBroken = false;
         Draw.netlist.forEach(component => {
             const [n1, n2] = component.nodes;
             const v1 = voltages[n1];
@@ -49,13 +51,24 @@ export function circuitSolver() {
                 component.element.current = (v1 - v2) / component.element.resistance;
                 
                 if (component.type === "LED") {
-                    component.element.isOn = component.element.current > 0.001;
+                    if (Math.abs(component.element.current) > component.element.maxCurrent) {
+                        const led = component.element;
+                        const damaged = new DamagedNode(led.x, led.y, led.w, led.h, led.terminals);
+                        Draw.replace(led, damaged);
+                        anyBroken = true;
+                    } else {
+                        component.element.isOn = component.element.current > 0.001;
+                    }
                 }
             } else if (component.type === "Battery") {
                 const mIdx = N + voltageSources.indexOf(component);
                 component.element.current = solution[mIdx];
             }
         });
+
+        if (anyBroken) {
+            throw new Error("One or more components have been damaged due to excessive current.");
+        }
 
     } catch (e) {
         console.error("Solver error:", e.message);

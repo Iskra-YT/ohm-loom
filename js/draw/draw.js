@@ -18,6 +18,14 @@ export class Draw {
         Draw.rebuildNodes();
     }
 
+    static replace(oldDrawable, newDrawable) {
+        const index = Draw.#drawList.indexOf(oldDrawable);
+        if (index !== -1) {
+            Draw.#drawList[index] = newDrawable;
+            Draw.rebuildNodes();
+        }
+    }
+
     static getList() {
         return Draw.#drawList;
     }
@@ -31,7 +39,6 @@ export class Draw {
 
         let nodes = buildNodes(elements, cables);
 
-        // Find ground node and move it to index 0
         const groundNodeIndex = nodes.findIndex(node => 
             node.some(terminal => terminal.element instanceof Ground)
         );
