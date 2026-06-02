@@ -18,6 +18,10 @@ document.querySelector("#led").addEventListener("click", () => {
     Draw.append(new LED(getPoint(5), getPoint(3)));
 });
 
+document.querySelector("#ground").addEventListener("click", () => {
+    Draw.append(new Ground(getPoint(5), getPoint(3)));
+});
+
 document.querySelector("#delete").addEventListener("click", () => {
     for (const el of [...Draw.getList()]) {
         Draw.remove(el);
