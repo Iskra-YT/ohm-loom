@@ -3,8 +3,8 @@ import { OhmElement } from "./element.js";
 export class DamagedNode extends OhmElement {
     resistance = 1e12; // Open circuit
 
-    constructor(x, y, w, h, terminals) {
-        super(x, y, w, h);
+    constructor(x, y, w, h, terminals, id = null) {
+        super(x, y, w, h, id);
         this.terminals = terminals.map(t => ({ x: t.x, y: t.y }));
     }
 

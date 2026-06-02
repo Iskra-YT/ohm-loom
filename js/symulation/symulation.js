@@ -3,33 +3,128 @@ import { calculateNodeCount } from "./tool.js";
 import { DamagedNode } from "../elements/damaged.js";
 
 export function circuitSolver() {
+    try {
+        const pass1 = solveMNA([]);
+        if (!pass1) return;
+
+        const activeLEDs = [];
+        Draw.netlist.forEach(component => {
+            if (component.type === "LED") {
+                const [n1, n2] = component.nodes;
+                if (n1 !== undefined && n2 !== undefined) {
+                    const vDiff = pass1.voltages[n1] - pass1.voltages[n2];
+                    if (vDiff > component.element.forwardVoltage) {
+                        activeLEDs.push(component);
+                    }
+                }
+            }
+        });
+
+        const pass2 = solveMNA(activeLEDs);
+        if (!pass2) return;
+
+        const { voltages, solution, N, voltageSources } = pass2;
+
+        let anyBroken = false;
+        let batteryIdx = 0;
+        let activeLedIdx = 0;
+
+        Draw.netlist.forEach(component => {
+            const [n1, n2] = component.nodes;
+            if (n1 === undefined || n2 === undefined) {
+                component.element.current = 0;
+                if (component.type === "LED") component.element.isOn = false;
+                return;
+            }
+
+            const v1 = voltages[n1];
+            const v2 = voltages[n2];
+            const vDiff = v1 - v2;
+            
+            if (component.type === "LED") {
+                const led = component.element;
+                if (activeLEDs.includes(component)) {
+                    const mIdx = N + voltageSources.length + activeLedIdx++;
+                    led.current = solution[mIdx];
+                    led.isOn = led.current > 1e-6;
+                } else {
+                    led.current = 0;
+                    led.isOn = false;
+                }
+
+                if (Math.abs(led.current) > led.maxCurrent) {
+                    const damaged = new DamagedNode(led.x, led.y, led.w, led.h, led.terminals, led.id);
+                    Draw.replace(led, damaged);
+                    anyBroken = true;
+                }
+            } else if (component.type === "Battery") {
+                const mIdx = N + batteryIdx++;
+                component.element.current = solution[mIdx];
+            } else if (component.element.resistance !== undefined) {
+                component.element.current = vDiff / component.element.resistance;
+            }
+        });
+
+        if (anyBroken) {
+            throw new Error("One or more components have been damaged due to excessive current.");
+        }
+
+    } catch (e) {
+        alert("Simulation error: " + e.message);
+        console.error("Solver error:", e.message);
+    }
+}
+
+function solveMNA(activeLEDs) {
     const totalNodes = calculateNodeCount();
     if (totalNodes < 2) {
-        console.warn("Not enough nodes to simulate.");
-        return;
+        alert("Not enough nodes to simulate. Make sure elements are connected.");
+        return null;
     }
 
     const nodeMapping = (n) => n - 1;
     const N = totalNodes - 1;
 
     const voltageSources = Draw.netlist.filter(c => c.type === "Battery");
-    const M = voltageSources.length;
+    const M = voltageSources.length + activeLEDs.length;
 
     const size = N + M;
+    if (size === 0) {
+        alert("No components to simulate.");
+        return null;
+    }
+
     const A = Array.from({ length: size }, () => new Array(size).fill(0));
     const z = new Array(size).fill(0);
 
+    const GMIN = 1e-9;
+    for (let i = 0; i < N; i++) {
+        A[i][i] += GMIN;
+    }
+
+    let mIdxOffset = 0;
     for (const component of Draw.netlist) {
         const [n1, n2] = component.nodes;
+        if (n1 === undefined || n2 === undefined) continue;
 
-        if (component.element.resistance !== undefined) {
+        if (component.type === "Battery") {
+            const mIdx = N + mIdxOffset++;
+            const v = component.element.voltage;
+            const r_int = component.element.internalResistance || 0.1;
+            addVoltageSourceWithResistance(A, z, n1, n2, mIdx, v, r_int, nodeMapping);
+        } else if (component.type === "LED") {
+            if (activeLEDs.includes(component)) {
+                const mIdx = N + mIdxOffset++;
+                const v = component.element.forwardVoltage;
+                const r = component.element.resistance || 10;
+                addVoltageSourceWithResistance(A, z, n1, n2, mIdx, v, r, nodeMapping);
+            } else {
+                const g = 1e-12; // Very high resistance for off LED
+                addConductance(A, n1, n2, g, nodeMapping);
+            }
+        } else if (component.element.resistance !== undefined) {
             const g = 1 / component.element.resistance;
             addConductance(A, n1, n2, g, nodeMapping);
-        } else if (component.type === "Battery") {
-            const mIdx = N + voltageSources.indexOf(component);
-            const v = component.element.voltage;
-
-            addVoltageSource(A, z, n1, n2, mIdx, v, nodeMapping);
         }
     }
 
@@ -39,39 +134,9 @@ export function circuitSolver() {
         for (let i = 0; i < N; i++) {
             voltages[i + 1] = solution[i];
         }
-
-        console.log("Voltages:", voltages);
-        let anyBroken = false;
-        Draw.netlist.forEach(component => {
-            const [n1, n2] = component.nodes;
-            const v1 = voltages[n1];
-            const v2 = voltages[n2];
-            
-            if (component.element.resistance !== undefined) {
-                component.element.current = (v1 - v2) / component.element.resistance;
-                
-                if (component.type === "LED") {
-                    if (Math.abs(component.element.current) > component.element.maxCurrent) {
-                        const led = component.element;
-                        const damaged = new DamagedNode(led.x, led.y, led.w, led.h, led.terminals);
-                        Draw.replace(led, damaged);
-                        anyBroken = true;
-                    } else {
-                        component.element.isOn = component.element.current > 0.001;
-                    }
-                }
-            } else if (component.type === "Battery") {
-                const mIdx = N + voltageSources.indexOf(component);
-                component.element.current = solution[mIdx];
-            }
-        });
-
-        if (anyBroken) {
-            throw new Error("One or more components have been damaged due to excessive current.");
-        }
-
+        return { voltages, solution, N, voltageSources };
     } catch (e) {
-        console.error("Solver error:", e.message);
+        throw e;
     }
 }
 
@@ -87,7 +152,7 @@ function addConductance(A, n1, n2, g, map) {
     }
 }
 
-function addVoltageSource(A, z, n1, n2, mIdx, v, map) {
+function addVoltageSourceWithResistance(A, z, n1, n2, mIdx, v, r_int, map) {
     const i = map(n1);
     const j = map(n2);
 
@@ -99,6 +164,8 @@ function addVoltageSource(A, z, n1, n2, mIdx, v, map) {
         A[j][mIdx] -= 1;
         A[mIdx][j] -= 1;
     }
+    
+    A[mIdx][mIdx] -= r_int;
     z[mIdx] = v;
 }
 
@@ -122,8 +189,8 @@ function solve(A, b) {
         b[maxRow] = b[i];
         b[i] = tmpB;
 
-        if (Math.abs(A[i][i]) < 1e-12) {
-            throw new Error("Matrix is singular or near-singular");
+        if (Math.abs(A[i][i]) < 1e-20) {
+            throw new Error("Matrix is singular or near-singular. Check for short circuits or unconnected components.");
         }
 
         for (let k = i + 1; k < n; k++) {

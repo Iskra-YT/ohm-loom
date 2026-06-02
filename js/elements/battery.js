@@ -2,6 +2,7 @@ import { OhmElement } from "./element.js";
 
 export class Battery extends OhmElement {
     voltage = 9; // V
+    internalResistance = 0.1; // Ohm
 
     constructor(x, y) {
         super(x, y, 50, 100);
@@ -50,12 +51,5 @@ export class Battery extends OhmElement {
             ctx.arc(this.x + t.x, this.y + t.y, 5, 0, Math.PI * 2);
             ctx.fill();
         });
-
-        if (this.current !== 0) {
-            ctx.fillStyle = "#3b82f6";
-            ctx.font = "12px Arial";
-            ctx.textAlign = "left";
-            ctx.fillText(`${(Math.abs(this.current) * 1000).toFixed(1)} mA`, this.x + this.w + 5, this.y + this.h / 2);
-        }
     }
 }

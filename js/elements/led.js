@@ -1,7 +1,8 @@
 import { OhmElement } from "./element.js";
 
 export class LED extends OhmElement {
-    resistance = 20; // Ohm
+    resistance = 10; // Ohm
+    forwardVoltage = 2.0; // V (typical for red LED)
     maxCurrent = 0.02; // 20 mA
     isOn = false;
 
@@ -69,11 +70,5 @@ export class LED extends OhmElement {
             ctx.arc(this.x + t.x, this.y + t.y, 5, 0, Math.PI * 2);
             ctx.fill();
         });
-
-        if (this.current !== 0) {
-            ctx.fillStyle = "#ef4444";
-            ctx.font = "12px Arial";
-            ctx.fillText(`${(this.current * 1000).toFixed(1)} mA`, this.x + 55, this.y + 30);
-        }
     }
 }

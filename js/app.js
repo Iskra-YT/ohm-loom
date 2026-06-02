@@ -6,6 +6,7 @@ const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
 let dragged = null;
+let selected = null;
 let wiringFrom = null;
 let mousePos = { x: 0, y: 0 };
 
@@ -20,7 +21,14 @@ function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     Draw.getList().forEach(el => {
-        el.draw(ctx);
+        if (el === selected) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#3b82f6";
+            el.draw(ctx);
+            ctx.shadowBlur = 0;
+        } else {
+            el.draw(ctx);
+        }
     });
 
     if (wiringFrom) {
@@ -35,6 +43,64 @@ function render() {
     }
 }
 
+export function updateSettingsBox() {
+    const box = document.querySelector("#settings-box");
+    const content = document.querySelector("#settings-content");
+    const title = document.querySelector("#settings-title");
+    const infoBox = document.querySelector("#info-box");
+    const infoContent = document.querySelector("#info-content");
+
+    if (!selected || !(selected instanceof OhmElement)) {
+        box.style.display = "none";
+        infoBox.style.display = "none";
+        return;
+    }
+
+    if (selected.current !== undefined) {
+        infoBox.style.display = "block";
+        const currentMA = (Math.abs(selected.current) * 1000).toFixed(4);
+        const v = selected.voltage !== undefined ? selected.voltage : Math.abs(selected.current * (selected.resistance || 0));
+        const powerW = (Math.abs(selected.current) * v).toFixed(4);
+        
+        infoContent.innerHTML = `
+            <div style="margin-bottom: 4px;">Current: <span style="color: #4ade80;">${currentMA} mA</span></div>
+            <div>Power: <span style="color: #fbbf24;">${powerW} W</span></div>
+        `;
+    } else {
+        infoBox.style.display = "none";
+    }
+
+    const props = [];
+    if (selected.voltage !== undefined) props.push({ label: "Voltage (V)", key: "voltage" });
+    if (selected.resistance !== undefined) props.push({ label: "Resistance (Ω)", key: "resistance" });
+    if (selected.forwardVoltage !== undefined) props.push({ label: "Forward Voltage (V)", key: "forwardVoltage", step: 0.1 });
+    if (selected.maxCurrent !== undefined) props.push({ label: "Max Current (A)", key: "maxCurrent", step: 0.001 });
+
+    if (props.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+
+    box.style.display = "block";
+    title.innerText = selected.constructor.name + " Settings";
+    content.innerHTML = "";
+
+    props.forEach(prop => {
+        const div = document.createElement("div");
+        div.style.marginBottom = "8px";
+        div.innerHTML = `
+            <label style="display:block; font-size: 12px; color: #b0b0b0; margin-bottom: 4px;">${prop.label}</label>
+            <input type="number" step="${prop.step || 1}" value="${selected[prop.key]}" style="width: 100%; background: #222; color: white; border: 1px solid #444; padding: 6px; border-radius: 4px; outline: none;">
+        `;
+        const input = div.querySelector("input");
+        input.addEventListener("input", (e) => {
+            selected[prop.key] = parseFloat(e.target.value) || 0;
+            // TODO: trigger re-simulation if desired
+        });
+        content.appendChild(div);
+    });
+}
+
 resizeCanvas();
 render();
 
@@ -43,7 +109,9 @@ window.addEventListener("resize", () => {
     render();
 });
 
-window.addEventListener("click" , render);
+window.addEventListener("click" , () => {
+    render();
+});
 
 canvas.addEventListener("contextmenu", (e) => {
     e.preventDefault();
@@ -60,6 +128,10 @@ canvas.addEventListener("mousedown", (e) => {
         for (let i = list.length - 1; i >= 0; i--) {
             const el = list[i];
             if (el.contains(mx, my)) {
+                if (el === selected) {
+                    selected = null;
+                    updateSettingsBox();
+                }
                 if (el instanceof OhmElement) {
                     const cables = list.filter(item => 
                         item instanceof Cable && (item.from.element === el || item.to.element === el)
@@ -92,13 +164,21 @@ canvas.addEventListener("mousedown", (e) => {
             }
         }
 
+        let found = false;
         for (const el of Draw.getList()) {
             if (el.contains(mx, my)) {
                 dragged = el;
+                selected = el;
+                found = true;
                 wiringFrom = null;
                 break;
             }
         }
+
+        if (!found) {
+            selected = null;
+        }
+        updateSettingsBox();
     }
 });
 

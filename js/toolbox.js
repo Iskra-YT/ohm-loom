@@ -4,6 +4,7 @@ import { LED } from "./elements/led.js";
 import { Ground } from "./elements/ground.js";
 import { Draw, getPoint } from "./draw/draw.js";
 import { circuitSolver } from "./symulation/symulation.js";
+import { updateSettingsBox } from "./app.js";
 
 document.querySelector("#battery").addEventListener("click", () => {
     Draw.append(new Battery(getPoint(5), getPoint(3)));
@@ -17,10 +18,6 @@ document.querySelector("#led").addEventListener("click", () => {
     Draw.append(new LED(getPoint(5), getPoint(3)));
 });
 
-document.querySelector("#ground").addEventListener("click", () => {
-    Draw.append(new Ground(getPoint(5), getPoint(3)));
-});
-
 document.querySelector("#delete").addEventListener("click", () => {
     for (const el of [...Draw.getList()]) {
         Draw.remove(el);
@@ -30,4 +27,5 @@ document.querySelector("#delete").addEventListener("click", () => {
 document.querySelector("#run").addEventListener("click", () => {
     Draw.buildNetlist();
     circuitSolver();
+    updateSettingsBox();
 });

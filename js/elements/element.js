@@ -5,10 +5,10 @@ let nextElementId = 0;
 export class OhmElement extends Drawable {
     current = 0; // A
 
-    constructor(x, y, w, h) {
+    constructor(x, y, w, h, id = null) {
         super(x, y, w, h);
 
-        this.id = nextElementId++;
+        this.id = id !== null ? id : nextElementId++;
         this.terminals = [];
     }
 
