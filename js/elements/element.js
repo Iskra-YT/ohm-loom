@@ -12,6 +12,10 @@ export class OhmElement extends Drawable {
         this.terminals = [];
     }
 
+    static setNextId(id) {
+        nextElementId = id;
+    }
+
     getTerminalPos(index) {
         const t = this.terminals[index];
         if (!t) return null;

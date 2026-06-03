@@ -1,7 +1,23 @@
 import { Cable } from "../elements/cable.js";
 import { OhmElement } from "../elements/element.js";
 import { Ground } from "../elements/ground.js";
+import { Battery } from "../elements/battery.js";
+import { Resistor } from "../elements/resistor.js";
+import { LED } from "../elements/led.js";
+import { Capacitor } from "../elements/capacitor.js";
+import { PolarizedCapacitor } from "../elements/polarized-capacitor.js";
+import { Joint } from "../elements/joint.js";
 import { buildNodes } from "../terminals.js";
+
+const COMPONENT_MAP = {
+    Battery,
+    Resistor,
+    LED,
+    Capacitor,
+    PolarizedCapacitor,
+    Ground,
+    Joint
+};
 
 export class Draw {
     static #drawList = [];
@@ -28,6 +44,80 @@ export class Draw {
 
     static getList() {
         return Draw.#drawList;
+    }
+
+    static clear() {
+        Draw.#drawList = [];
+        Draw.rebuildNodes();
+    }
+
+    static serialize() {
+        const elements = Draw.#drawList.filter(el => el instanceof OhmElement);
+        const cables = Draw.#drawList.filter(el => el instanceof Cable);
+
+        const serializedElements = elements.map(el => {
+            const data = {
+                type: el.constructor.name,
+                id: el.id,
+                x: el.x,
+                y: el.y
+            };
+            const props = ["resistance", "voltage", "capacitance", "forwardVoltage", "maxCurrent", "internalResistance"];
+            props.forEach(p => {
+                if (el[p] !== undefined) data[p] = el[p];
+            });
+            return data;
+        });
+
+        const serializedCables = cables.map(c => ({
+            from: { elementId: c.from.element.id, terminalIndex: c.from.terminalIndex },
+            to: { elementId: c.to.element.id, terminalIndex: c.to.terminalIndex },
+            points: c.points
+        }));
+
+        return JSON.stringify({ elements: serializedElements, cables: serializedCables }, null, 2);
+    }
+
+    static deserialize(json) {
+        const data = JSON.parse(json);
+        Draw.clear();
+
+        const elementMap = new Map();
+        let maxId = -1;
+
+        data.elements.forEach(elData => {
+            const Cls = COMPONENT_MAP[elData.type];
+            if (!Cls) return;
+
+            const el = new Cls(elData.x, elData.y);
+            el.id = elData.id;
+            if (el.id > maxId) maxId = el.id;
+
+            for (const key in elData) {
+                if (!["type", "id", "x", "y"].includes(key)) {
+                    el[key] = elData[key];
+                }
+            }
+            elementMap.set(el.id, el);
+            Draw.#drawList.push(el);
+        });
+
+        OhmElement.setNextId(maxId + 1);
+
+        data.cables.forEach(cData => {
+            const fromEl = elementMap.get(cData.from.elementId);
+            const toEl = elementMap.get(cData.to.elementId);
+            if (fromEl && toEl) {
+                const cable = new Cable(
+                    { element: fromEl, terminalIndex: cData.from.terminalIndex },
+                    { element: toEl, terminalIndex: cData.to.terminalIndex }
+                );
+                cable.points = cData.points || [];
+                Draw.#drawList.push(cable);
+            }
+        });
+
+        Draw.rebuildNodes();
     }
 
     static rebuildNodes() {

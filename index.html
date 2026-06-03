@@ -36,6 +36,8 @@
                         <h5>Passive Components</h5>
                         <button id="resistor">Resistor</button>
                         <button id="led">LED</button>
+                        <button id="capacitor">Capacitor</button>
+                        <button id="polarized-capacitor">Polarized Cap</button>
                     </div>
                 </div>
                 <div id="info">
@@ -50,6 +52,18 @@
                         </div>
                     </div>
                     <div id="properties">
+                        <select id="default-sets" style="background: #222; color: white; border: 1px solid #444; padding: 6px; border-radius: 4px; outline: none; margin-right: 8px;">
+                            <option value="">Default Sets</option>
+                            <option value="simple-led">Simple LED</option>
+                            <option value="voltage-divider">Voltage Divider</option>
+                            <option value="capacitor-test">Capacitor Test</option>
+                        </select>
+                        <button id="upload">
+                            <span class="material-symbols-outlined">
+                                upload
+                            </span>
+                        </button>
+                        <input type="file" id="file-input" style="display: none;" accept=".json">
                         <button id="delete">
                             <span class="material-symbols-outlined">
                                 delete

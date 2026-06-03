@@ -94,6 +94,7 @@ export function updateSettingsBox() {
     const props = [];
     if (selected.voltage !== undefined) props.push({ label: "Voltage (V)", key: "voltage" });
     if (selected.resistance !== undefined) props.push({ label: "Resistance (Ω)", key: "resistance" });
+    if (selected.capacitance !== undefined) props.push({ label: "Capacitance (F)", key: "capacitance", step: 0.000001 });
     if (selected.forwardVoltage !== undefined) props.push({ label: "Forward Voltage (V)", key: "forwardVoltage", step: 0.1 });
     if (selected.maxCurrent !== undefined) props.push({ label: "Max Current (A)", key: "maxCurrent", step: 0.001 });
 
