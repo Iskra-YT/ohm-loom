@@ -54,7 +54,26 @@ aside {
 #toolbox {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 16px;
+}
+
+.toolbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toolbox-group h5 {
+    margin: 0 0 4px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.toolbox-group button {
+    width: 100%;
 }
 
 aside h4 {

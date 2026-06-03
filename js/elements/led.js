@@ -2,7 +2,7 @@ import { OhmElement } from "./element.js";
 
 export class LED extends OhmElement {
     resistance = 10; // Ohm
-    forwardVoltage = 2.0; // V (typical for red LED)
+    forwardVoltage = 2.0; // V
     maxCurrent = 0.02; // 20 mA
     isOn = false;
 
