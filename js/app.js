@@ -33,7 +33,7 @@ function render() {
     Draw.getList().forEach(el => {
         if (el === selected) {
             ctx.shadowBlur = 10;
-            ctx.shadowColor = "#3b82f6";
+            ctx.shadowColor = "#d0bcff";
             el.draw(ctx);
             ctx.shadowBlur = 0;
         } else {
@@ -65,6 +65,7 @@ function render() {
 }
 
 export function updateSettingsBox() {
+    const infoPanel = document.querySelector("#info");
     const box = document.querySelector("#settings-box");
     const content = document.querySelector("#settings-content");
     const title = document.querySelector("#settings-title");
@@ -72,10 +73,11 @@ export function updateSettingsBox() {
     const infoContent = document.querySelector("#info-content");
 
     if (!selected || !(selected instanceof OhmElement)) {
-        box.style.display = "none";
-        infoBox.style.display = "none";
+        infoPanel.style.display = "none";
         return;
     }
+
+    infoPanel.style.display = "flex";
 
     if (selected.current !== undefined) {
         infoBox.style.display = "block";
@@ -84,8 +86,8 @@ export function updateSettingsBox() {
         const powerW = (Math.abs(selected.current) * v).toFixed(4);
         
         infoContent.innerHTML = `
-            <div style="margin-bottom: 4px;">Current: <span style="color: #4ade80;">${currentMA} mA</span></div>
-            <div>Power: <span style="color: #fbbf24;">${powerW} W</span></div>
+            <div class="info-item">Current: <span class="info-value-success">${currentMA} mA</span></div>
+            <div class="info-item">Power: <span class="info-value-warning">${powerW} W</span></div>
         `;
     } else {
         infoBox.style.display = "none";
@@ -109,10 +111,10 @@ export function updateSettingsBox() {
 
     props.forEach(prop => {
         const div = document.createElement("div");
-        div.style.marginBottom = "8px";
+        div.className = "settings-item";
         div.innerHTML = `
-            <label style="display:block; font-size: 12px; color: #b0b0b0; margin-bottom: 4px;">${prop.label}</label>
-            <input type="number" step="${prop.step || 1}" value="${selected[prop.key]}" style="width: 100%; background: #222; color: white; border: 1px solid #444; padding: 6px; border-radius: 4px; outline: none;">
+            <label>${prop.label}</label>
+            <input type="number" step="${prop.step || 1}" value="${selected[prop.key]}">
         `;
         const input = div.querySelector("input");
         input.addEventListener("input", (e) => {

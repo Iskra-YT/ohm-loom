@@ -10,27 +10,27 @@ import { updateSettingsBox } from "./app.js";
 import { defaultSets } from "./default-sets.js";
 
 document.querySelector("#battery").addEventListener("click", () => {
-    Draw.append(new Battery(getPoint(5), getPoint(3)));
+    Draw.append(new Battery(getPoint(15), getPoint(5)));
 });
 
 document.querySelector("#resistor").addEventListener("click", () => {
-    Draw.append(new Resistor(getPoint(5), getPoint(3)));
+    Draw.append(new Resistor(getPoint(15), getPoint(5)));
 });
 
 document.querySelector("#led").addEventListener("click", () => {
-    Draw.append(new LED(getPoint(5), getPoint(3)));
+    Draw.append(new LED(getPoint(15), getPoint(5)));
 });
 
 document.querySelector("#capacitor").addEventListener("click", () => {
-    Draw.append(new Capacitor(getPoint(5), getPoint(3)));
+    Draw.append(new Capacitor(getPoint(15), getPoint(5)));
 });
 
 document.querySelector("#polarized-capacitor").addEventListener("click", () => {
-    Draw.append(new PolarizedCapacitor(getPoint(5), getPoint(3)));
+    Draw.append(new PolarizedCapacitor(getPoint(15), getPoint(5)));
 });
 
 document.querySelector("#ground").addEventListener("click", () => {
-    Draw.append(new Ground(getPoint(5), getPoint(3)));
+    Draw.append(new Ground(getPoint(15), getPoint(5)));
 });
 
 document.querySelector("#delete").addEventListener("click", () => {

@@ -21,70 +21,87 @@
         </style>
     </head>
     <body>
-        <nav>
+        <div id="top-bar" class="floating-panel">
             <h4>OhmLoom</h4>
-        </nav>
+        </div>
+
         <main>
-            <aside>
-                <div id="toolbox">
-                    <div class="toolbox-group">
-                        <h5>Power Sources</h5>
-                        <button id="battery">Battery</button>
-                        <button id="ground">Ground</button>
-                    </div>
-                    <div class="toolbox-group">
-                        <h5>Passive Components</h5>
-                        <button id="resistor">Resistor</button>
-                        <button id="led">LED</button>
-                        <button id="capacitor">Capacitor</button>
-                        <button id="polarized-capacitor">Polarized Cap</button>
-                    </div>
-                </div>
-                <div id="info">
-                    <div id="info-box">
-                        <h4>Live Info</h4>
-                        <div id="info-content"></div>
-                    </div>
-                    <div>
-                        <div id="settings-box">
-                            <h4 id="settings-title">Settings</h4>
-                            <div id="settings-content"></div>
-                        </div>
-                    </div>
-                    <div id="properties">
-                        <select id="default-sets" style="background: #222; color: white; border: 1px solid #444; padding: 6px; border-radius: 4px; outline: none; margin-right: 8px;">
-                            <option value="">Default Sets</option>
-                            <option value="simple-led">Simple LED</option>
-                            <option value="voltage-divider">Voltage Divider</option>
-                            <option value="capacitor-test">Capacitor Test</option>
-                        </select>
-                        <button id="upload">
-                            <span class="material-symbols-outlined">
-                                upload
-                            </span>
-                        </button>
-                        <input type="file" id="file-input" style="display: none;" accept=".json">
-                        <button id="delete">
-                            <span class="material-symbols-outlined">
-                                delete
-                            </span>
-                        </button>
-                        <button id="download">
-                            <span class="material-symbols-outlined">
-                                download
-                            </span>
-                        </button>
-                        <button id="run">
-                            <span class="material-symbols-outlined">
-                                play_arrow
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </aside>
             <section class="workspace">
                 <canvas id="scene"></canvas>
             </section>
+
+            <aside id="toolbox" class="floating-panel">
+                <div class="toolbox-group">
+                    <h5>Power</h5>
+                    <button id="battery">
+                        <span class="material-symbols-outlined">electric_bolt</span>
+                        Battery
+                    </button>
+                    <button id="ground">
+                        <span class="material-symbols-outlined">south</span>
+                        Ground
+                    </button>
+                </div>
+                <div class="toolbox-group">
+                    <h5>Passive</h5>
+                    <button id="resistor">
+                        <span class="material-symbols-outlined">rebase_edit</span>
+                        Resistor
+                    </button>
+                    <button id="led">
+                        <span class="material-symbols-outlined">lightbulb</span>
+                        LED
+                    </button>
+                    <button id="capacitor">
+                        <span class="material-symbols-outlined">format_overline</span>
+                        Capacitor
+                    </button>
+                    <button id="polarized-capacitor">
+                        <span class="material-symbols-outlined">format_underlined</span>
+                        Polarized Cap
+                    </button>
+                </div>
+            </aside>
+
+            <div id="info" class="floating-panel">
+                <div id="info-box">
+                    <h4>Live Info</h4>
+                    <div id="info-content"></div>
+                </div>
+                <div id="settings-box">
+                    <h4 id="settings-title">Settings</h4>
+                    <div id="settings-content"></div>
+                </div>
+            </div>
+
+            <div id="action-dock" class="floating-panel">
+                <div id="properties">
+                    <select id="default-sets">
+                        <option value="">Default Sets</option>
+                        <option value="simple-led">Simple LED</option>
+                        <option value="parallel-leds">Parallel LEDs</option>
+                        <option value="rc-circuit">RC Circuit (Charging)</option>
+                        <option value="voltage-divider">Voltage Divider</option>
+                        <option value="capacitor-test">Capacitor Test</option>
+                    </select>
+                    <div class="action-buttons">
+                        <button id="upload" title="Upload JSON">
+                            <span class="material-symbols-outlined">upload</span>
+                        </button>
+                        <input type="file" id="file-input" style="display: none;" accept=".json">
+                        <button id="delete" title="Clear Workspace">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                        <button id="download" title="Download JSON">
+                            <span class="material-symbols-outlined">download</span>
+                        </button>
+                        <button id="run" title="Run Simulation">
+                            <span class="material-symbols-outlined">play_arrow</span>
+                            Run
+                        </button>
+                    </div>
+                </div>
+            </div>
         </main>
         <script src="./js/app.js" type="module" defer></script>
     </body>
