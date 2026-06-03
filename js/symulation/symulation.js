@@ -97,7 +97,7 @@ function solveMNA(activeLEDs) {
     const A = Array.from({ length: size }, () => new Array(size).fill(0));
     const z = new Array(size).fill(0);
 
-    const GMIN = 1e-9;
+    const GMIN = 1e-15;
     for (let i = 0; i < N; i++) {
         A[i][i] += GMIN;
     }
@@ -112,17 +112,29 @@ function solveMNA(activeLEDs) {
             const v = component.element.voltage;
             const r_int = component.element.internalResistance || 0.1;
             addVoltageSourceWithResistance(A, z, n1, n2, mIdx, v, r_int, nodeMapping);
-        } else if (component.type === "LED") {
-            if (activeLEDs.includes(component)) {
-                const mIdx = N + mIdxOffset++;
-                const v = component.element.forwardVoltage;
-                const r = component.element.resistance || 10;
-                addVoltageSourceWithResistance(A, z, n1, n2, mIdx, v, r, nodeMapping);
-            } else {
-                const g = 1e-12; // Very high resistance for off LED
-                addConductance(A, n1, n2, g, nodeMapping);
-            }
-        } else if (component.element.resistance !== undefined) {
+        }
+    }
+
+    for (const component of Draw.netlist) {
+        const [n1, n2] = component.nodes;
+        if (n1 === undefined || n2 === undefined) continue;
+
+        if (component.type === "LED" && activeLEDs.includes(component)) {
+            const mIdx = N + mIdxOffset++;
+            const v = component.element.forwardVoltage;
+            const r = component.element.resistance || 10;
+            addVoltageSourceWithResistance(A, z, n1, n2, mIdx, v, r, nodeMapping);
+        }
+    }
+
+    for (const component of Draw.netlist) {
+        const [n1, n2] = component.nodes;
+        if (n1 === undefined || n2 === undefined) continue;
+
+        if (component.type === "LED" && !activeLEDs.includes(component)) {
+            const g = 1e-12;
+            addConductance(A, n1, n2, g, nodeMapping);
+        } else if (component.element.resistance !== undefined && component.type !== "Battery" && component.type !== "LED") {
             const g = 1 / component.element.resistance;
             addConductance(A, n1, n2, g, nodeMapping);
         }
